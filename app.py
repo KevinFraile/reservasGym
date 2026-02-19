@@ -100,11 +100,20 @@ def api_inventario():
         db = app.config['MONGO_DB']
         if request.method == "POST":
             data = request.json
+            
+            # 1. Asegurarnos de que el ID sea un entero
             if not data.get("ID"):
                 data["ID"] = int(datetime.now().timestamp())
+            else:
+                data["ID"] = int(data["ID"])
+            
+            # 2. FIX: Convertir explícitamente a números (Float/Int) antes de guardar
+            data["Cantidad"] = float(data.get("Cantidad", 0))
+            data["Costo_Compra"] = float(data.get("Costo_Compra", 0))
+            data["Precio_Venta_Sugerido"] = float(data.get("Precio_Venta_Sugerido", 0))
             
             # Actualiza si existe, si no, lo crea (upsert=True)
-            db.productos.update_one({"ID": int(data["ID"])}, {"$set": data}, upsert=True)
+            db.productos.update_one({"ID": data["ID"]}, {"$set": data}, upsert=True)
             return jsonify({"mensaje": "Guardado"})
         
         # GET: Retornar lista de productos
@@ -112,7 +121,7 @@ def api_inventario():
         return jsonify(productos)
     except Exception as e: 
         return jsonify({"error": str(e)}), 500
-
+    
 @app.route("/api/borrar_producto", methods=["POST"])
 @jwt_required()
 def api_borrar_producto():
