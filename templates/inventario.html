@@ -107,8 +107,7 @@
                     <p class="text-xs font-bold text-white">Admin</p>
                     <p class="text-[10px] text-gym-neon">En línea</p>
                 </div>
-                <button onclick="window.location.href='/'" class="ml-auto text-gray-400 hover:text-red-400" title="Salir"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
+                <button onclick="logoutSeguro()" class="ml-auto text-gray-400 hover:text-red-400" title="Salir"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </aside>
 
@@ -500,13 +499,31 @@
             document.getElementById('modal-reserva').classList.remove('hidden');
         }
 
+        // --- LOGOUT SEGURO ---
+        async function logoutSeguro() {
+            await fetch('/api/logout', { method: 'POST' });
+            window.location.href = '/';
+        }
+
+        // --- EDITAR RESERVA (CON FIX DE SERVICIO) ---
         function editarReserva(id) {
             const r = listaReservas.find(x => x.ID_Reserva === id);
             if(!r) return;
+            
             document.getElementById('res-id').value = r.ID_Reserva;
             document.getElementById('res-nombre').value = r.Nombre;
             document.getElementById('res-conjunto').value = r.Conjunto;
-            document.getElementById('res-servicio').value = r.Servicio;
+            
+            // Fix para el Select de Servicio
+            const selectServicio = document.getElementById('res-servicio');
+            const opciones = Array.from(selectServicio.options);
+            const opcionSeleccionada = opciones.find(opt => opt.value === r.Servicio || opt.text === r.Servicio);
+            if (opcionSeleccionada) {
+                selectServicio.value = opcionSeleccionada.value;
+            } else {
+                selectServicio.value = r.Servicio; // Por si hay datos viejos
+            }
+
             document.getElementById('res-torre').value = r.Torre_Apto;
             document.getElementById('res-doc').value = r.Documento;
             document.getElementById('res-fecha').value = r.Fecha_Reserva;

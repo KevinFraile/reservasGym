@@ -413,12 +413,36 @@
         }
 
         // --- LOGIN ---
-        document.getElementById('loginFormSystem').addEventListener('submit', function(e) {
+       // --- LOGIN SEGURO CON JWT ---
+        document.getElementById('loginFormSystem').addEventListener('submit', async function(e) {
             e.preventDefault();
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
-            if(u==='admin' && p==='admin') window.location.href = '/inventario';
-            else Swal.fire({ title: 'Error', text: 'Datos incorrectos', icon: 'error' });
+            const btn = e.target.querySelector('button[type="submit"]');
+            
+            btn.innerText = "VERIFICANDO...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+
+                if (response.ok) {
+                    // El backend nos dio la cookie segura, redirigimos
+                    window.location.href = '/inventario';
+                } else {
+                    Swal.fire({ title: 'Error', text: 'Usuario o contraseña incorrectos', icon: 'error' });
+                    document.getElementById('password').value = "";
+                }
+            } catch (error) {
+                Swal.fire({ title: 'Error', text: 'Error de conexión con el servidor', icon: 'error' });
+            } finally {
+                btn.innerText = "INGRESAR";
+                btn.disabled = false;
+            }
         });
     </script>
 </body>
