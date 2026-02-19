@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GYM SEBITAS | Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gym: {
+                            dark: '#0B0C10',
+                            gray: '#1F2833',
+                            light: '#C5C6C7',
+                            neon: '#66FCF1',
+                            blue: '#45A29E'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        sport: ['Orbitron', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0B0C10; color: #C5C6C7; }
+        .font-sport { font-family: 'Orbitron', sans-serif; }
+        
+        .tab-active { background-color: rgba(102, 252, 241, 0.1); color: #66FCF1; border-right: 3px solid #66FCF1; }
+        .tab-inactive { color: #8892b0; border-right: 3px solid transparent; }
+        .tab-inactive:hover { background-color: #1F2833; color: #C5C6C7; }
+
+        .btn-primary { background-color: #45A29E; color: #0B0C10; font-weight: bold; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #66FCF1; }
+        
+        .card { background: #1F2833; border: 1px solid #2d3748; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5); }
+        
+        input, select {
+            background-color: #0B0C10 !important; 
+            border-color: #45A29E !important; 
+            color: white !important;
+        }
+        input:focus, select:focus {
+            border-color: #66FCF1 !important;
+            outline: none;
+            box-shadow: 0 0 5px rgba(102, 252, 241, 0.3);
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0C10; }
+        ::-webkit-scrollbar-thumb { background: #45A29E; border-radius: 4px; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .swal2-popup { background: #1F2833 !important; color: white !important; border: 1px solid #45A29E; }
+        .swal2-title { color: #66FCF1 !important; }
+    </style>
+</head>
+<body class="h-screen flex flex-col md:flex-row overflow-hidden text-slate-200">
+
+    <div id="mobile-overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black/80 z-20 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-72 bg-gym-dark border-r border-gym-gray flex flex-col transform -translate-x-full md:translate-x-0 md:static h-full shadow-2xl">
+        <div class="p-6 flex items-center gap-3 border-b border-gym-gray/50">
+            <div class="w-10 h-10 bg-gym-neon rounded-lg flex items-center justify-center text-gym-dark font-bold text-xl shadow-[0_0_10px_#66FCF1]">
+                <i class="fas fa-dumbbell"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-sport font-bold text-white tracking-wider">SEBITAS</h1>
+                <p class="text-[10px] text-gym-blue uppercase tracking-widest">Admin Panel</p>
+            </div>
+            <button onclick="toggleMenu()" class="md:hidden text-gray-400 hover:text-white ml-auto"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <button onclick="cambiarTab('dashboard'); toggleMenu()" id="btn-dashboard" class="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all tab-active font-medium">
+                <i class="fas fa-chart-line w-5 text-center"></i> <span>Dashboard</span>
+            </button>
+            <button onclick="cambiarTab('ventas'); toggleMenu()" id="btn-ventas" class="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all tab-inactive font-medium">
+                <i class="fas fa-cash-register w-5 text-center"></i> <span>Punto de Venta</span>
+            </button>
+            <button onclick="cambiarTab('inventario'); toggleMenu()" id="btn-inventario" class="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all tab-inactive font-medium">
+                <i class="fas fa-boxes w-5 text-center"></i> <span>Inventario</span>
+            </button>
+            <button onclick="cambiarTab('reservas'); toggleMenu()" id="btn-reservas" class="w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all tab-inactive font-medium">
+                <i class="fas fa-calendar-check w-5 text-center"></i> <span>Reservas</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-gym-gray">
+            <div class="bg-gym-gray/50 rounded-xl p-3 flex items-center gap-3 border border-gym-blue/20">
+                <div class="w-8 h-8 rounded-full bg-gym-blue flex items-center justify-center text-gym-dark font-bold"><i class="fas fa-user-shield"></i></div>
+                <div>
+                    <p class="text-xs font-bold text-white">Admin</p>
+                    <p class="text-[10px] text-gym-neon">En línea</p>
+                </div>
+                <button onclick="window.location.href='/'" class="ml-auto text-gray-400 hover:text-red-400" title="Salir"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full w-full relative overflow-hidden bg-black/90">
+        
+        <header class="md:hidden bg-gym-dark px-4 py-3 shadow-md flex justify-between items-center z-10 border-b border-gym-gray">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMenu()" class="text-gym-neon p-2"><i class="fas fa-bars text-xl"></i></button>
+                <span class="font-sport font-bold text-lg text-white">GYM SEBITAS</span>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto scroll-smooth p-4 md:p-8">
+            <div class="max-w-7xl mx-auto pb-20 md:pb-0"> 
+                
+                <div id="view-dashboard" class="fade-in block space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 bg-gym-gray p-5 rounded-2xl border border-gym-blue/20">
+                        <div>
+                            <h2 class="text-2xl font-sport font-bold text-white">Resumen Global</h2>
+                            <p class="text-xs text-gray-400">Estadísticas en tiempo real</p>
+                        </div>
+                        <div class="flex gap-2 bg-gym-dark p-2 rounded-lg border border-gym-gray">
+                            <input type="date" id="filtro-inicio" class="text-xs rounded px-2 py-1">
+                            <input type="date" id="filtro-fin" class="text-xs rounded px-2 py-1">
+                            <button onclick="cargarReportes()" class="bg-gym-blue text-black px-3 py-1 rounded text-xs font-bold hover:bg-gym-neon"><i class="fas fa-filter"></i></button>
+                            <button onclick="limpiarFiltros()" class="bg-gray-700 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"><i class="fas fa-sync"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="card p-5 border-l-4 border-gym-neon">
+                            <p class="text-xs font-bold text-gray-400 uppercase">Ingresos</p>
+                            <p class="text-2xl font-mono font-bold text-white mt-1" id="kpi-ingresos">$0</p>
+                        </div>
+                        <div class="card p-5 border-l-4 border-gym-blue">
+                            <p class="text-xs font-bold text-gray-400 uppercase">Ganancia</p>
+                            <p class="text-2xl font-mono font-bold text-gym-neon mt-1" id="kpi-ganancia">$0</p>
+                        </div>
+                        <div class="card p-5 border-l-4 border-purple-500">
+                            <p class="text-xs font-bold text-gray-400 uppercase">Ventas</p>
+                            <p class="text-2xl font-mono font-bold text-white mt-1" id="kpi-ventas">0</p>
+                        </div>
+                        <div class="card p-5 border-l-4 border-orange-500">
+                            <p class="text-xs font-bold text-gray-400 uppercase">Inventario</p>
+                            <p class="text-2xl font-mono font-bold text-white mt-1" id="kpi-bodega">$0</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 card p-6">
+                            <h3 class="font-bold text-white mb-4"><i class="fas fa-chart-area text-gym-neon mr-2"></i> Tendencia de Ventas</h3>
+                            <div class="h-[300px] w-full">
+                                <canvas id="ventasChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card p-6">
+                            <h3 class="font-bold text-white mb-4"><i class="fas fa-crown text-yellow-400 mr-2"></i> Top Productos</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <tbody id="tabla-top-productos" class="divide-y divide-gray-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-ventas" class="hidden fade-in space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="card p-6 border-t-4 border-gym-neon">
+                                <h3 class="text-lg font-bold text-white mb-4">Nueva Venta</h3>
+                                <form onsubmit="agregarAlCarrito(event)" class="space-y-4">
+                                    <div>
+                                        <label class="text-xs uppercase font-bold text-gym-blue block mb-1">Producto</label>
+                                        <select id="venta-producto" class="w-full p-2.5 rounded text-sm" required onchange="actualizarInfoProductoVenta()"><option value="">Seleccione...</option></select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Cant</label><input type="number" id="venta-cantidad" min="1" class="w-full p-2.5 rounded text-sm" required></div>
+                                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Precio</label><input type="text" id="venta-precio" class="w-full p-2.5 rounded text-sm font-bold" oninput="formatearMoneda(this)" required></div>
+                                    </div>
+                                    <button type="submit" class="w-full btn-primary py-3 rounded font-bold shadow-lg shadow-gym-neon/20"><i class="fas fa-cart-plus mr-2"></i> AGREGAR</button>
+                                </form>
+                            </div>
+                            
+                            <div class="card p-6 flex flex-col items-center justify-center text-center h-[200px] relative overflow-hidden group">
+                                <div id="info-img-container" class="w-full h-full absolute inset-0 hidden">
+                                    <img id="info-img-producto" src="" class="w-full h-full object-cover opacity-50 group-hover:opacity-80 transition-opacity">
+                                </div>
+                                <div id="info-placeholder" class="z-10">
+                                    <i class="fas fa-box-open text-4xl text-gray-600 mb-2"></i>
+                                    <p class="text-xs text-gray-500">Selecciona un producto</p>
+                                </div>
+                                <div class="absolute bottom-2 right-2 z-10 text-right">
+                                    <p class="text-[10px] text-gym-neon uppercase">Hora Sistema</p>
+                                    <p class="text-xl font-mono font-bold text-white" id="reloj">--:--</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-2 space-y-6 flex flex-col h-full">
+                            <div class="card p-6 flex-1 flex flex-col">
+                                <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-700">
+                                    <h3 class="font-bold text-white"><i class="fas fa-shopping-cart text-gym-neon mr-2"></i> Carrito Actual</h3>
+                                    <span class="text-xs bg-gym-blue text-black px-2 py-1 rounded font-bold" id="items-count">0 Items</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-3 mb-4">
+                                    <input type="text" id="venta-cliente" class="w-full p-2 rounded text-sm" placeholder="Cliente">
+                                    <input type="text" id="venta-direccion" class="w-full p-2 rounded text-sm" placeholder="Dirección / Torre">
+                                </div>
+                                <div class="flex-1 overflow-y-auto min-h-[200px] mb-4 border border-gray-700 rounded bg-black/30">
+                                    <table class="w-full text-left text-sm text-gray-300">
+                                        <thead class="bg-gray-800 text-gym-blue sticky top-0"><tr><th class="p-2">Prod</th><th class="p-2 text-center">Cant</th><th class="p-2 text-right">Total</th><th class="p-2"></th></tr></thead>
+                                        <tbody id="tabla-carrito" class="divide-y divide-gray-700"></tbody>
+                                    </table>
+                                    <div id="carrito-vacio" class="text-center py-10 text-gray-600 italic"><i class="fas fa-basket-shopping text-2xl mb-2"></i><br>Vacío</div>
+                                </div>
+                                <div class="flex justify-between items-center bg-black/50 p-4 rounded-lg border border-gym-blue/30">
+                                    <div>
+                                        <p class="text-xs text-gray-400 uppercase">Total a Pagar</p>
+                                        <p class="text-3xl font-mono font-bold text-gym-neon leading-none" id="carrito-total">$0</p>
+                                    </div>
+                                    <button onclick="procesarVentaCarrito()" class="bg-white text-black px-6 py-2 rounded font-bold hover:bg-gray-200 shadow-lg">COBRAR <i class="fas fa-check ml-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-white">Últimas Ventas</h3>
+                            <button onclick="cargarHistorialVentas()" class="text-gym-neon hover:text-white"><i class="fas fa-sync"></i></button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="bg-gray-800 text-gray-400 uppercase text-xs"><tr><th class="p-3">Fecha</th><th class="p-3">Cliente</th><th class="p-3">Prod</th><th class="p-3 text-right">Total</th><th class="p-3 text-center">Acción</th></tr></thead>
+                                <tbody id="tabla-historial-ventas" class="divide-y divide-gray-700"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-inventario" class="hidden fade-in space-y-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Inventario</h2>
+                            <p class="text-xs text-gray-400">Gestión de stock</p>
+                        </div>
+                        <button onclick="abrirModalProducto()" class="btn-primary px-4 py-2 rounded flex items-center gap-2 shadow-lg shadow-gym-neon/20">
+                            <i class="fas fa-plus"></i> Nuevo Item
+                        </button>
+                    </div>
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300"> 
+                                <thead class="bg-gray-800 text-gym-blue uppercase text-xs">
+                                    <tr><th class="p-3 text-center"><i class="fas fa-image"></i></th><th class="p-3">Producto</th><th class="p-3 text-center">Stock</th><th class="p-3 text-right">Costo</th><th class="p-3 text-right">Venta</th><th class="p-3 text-center">Acciones</th></tr>
+                                </thead>
+                                <tbody id="tabla-inventario" class="divide-y divide-gray-700 bg-gym-gray/20"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-reservas" class="hidden fade-in space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center bg-gym-gray p-6 rounded-2xl border border-gym-blue/20">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">Reservas</h2>
+                            <p class="text-xs text-gray-400">Agenda de actividades</p>
+                        </div>
+                        <div class="flex gap-2 items-end mt-4 md:mt-0">
+                            <button onclick="abrirModalReserva()" class="bg-gym-neon text-gym-dark px-4 py-2 rounded font-bold hover:bg-white transition-all"><i class="fas fa-plus"></i> Nueva Reserva</button>
+                        </div>
+                    </div>
+
+                    <div class="card overflow-hidden p-4">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <i class="fas fa-filter text-gym-blue"></i>
+                                <input type="date" id="filtro-fecha-reserva" onchange="cargarReservas()" class="p-2 rounded text-sm bg-black text-white border border-gray-700 w-full md:w-auto">
+                            </div>
+                            <button onclick="limpiarFiltroReservas()" class="text-gym-neon hover:text-white text-sm font-bold flex items-center gap-2"><i class="fas fa-list-ul"></i> VER TODAS (Próximas)</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-300">
+                                <thead class="bg-gray-800 text-gym-neon uppercase text-xs">
+                                    <tr>
+                                        <th class="p-3">Fecha/Hora</th>
+                                        <th class="p-3">Actividad</th>
+                                        <th class="p-3">Cliente</th>
+                                        <th class="p-3">Ubicación</th>
+                                        <th class="p-3">Contacto</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-reservas" class="divide-y divide-gray-700 bg-gym-gray/20"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-producto" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="cerrarModal('modal-producto')"></div>
+        <div class="absolute inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center pointer-events-none">
+            <div class="bg-gym-gray border border-gym-blue w-full md:w-[450px] rounded-t-2xl md:rounded-2xl shadow-2xl pointer-events-auto transform transition-transform duration-300 flex flex-col max-h-[90vh]">
+                <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-white">Producto</h3>
+                    <button onclick="cerrarModal('modal-producto')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="p-5 overflow-y-auto">
+                    <form id="form-producto" onsubmit="guardarProducto(event)" class="space-y-4">
+                        <input type="hidden" id="prod-id">
+                        <div>
+                            <label class="text-xs uppercase font-bold text-gym-blue block mb-1">URL Imagen</label>
+                            <div class="flex gap-3">
+                                <div class="w-16 h-16 bg-black rounded border border-gray-600 flex items-center justify-center overflow-hidden shrink-0">
+                                    <img id="prod-preview" class="w-full h-full object-cover hidden">
+                                    <i id="prod-preview-icon" class="fas fa-image text-gray-600 text-xl"></i>
+                                </div>
+                                <input type="text" id="prod-imagen" class="w-full p-2 rounded text-sm" oninput="previewImagen(this.value)">
+                            </div>
+                        </div>
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Nombre</label><input type="text" id="prod-nombre" class="w-full p-2 rounded text-sm" required></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Stock</label><input type="number" id="prod-cantidad" class="w-full p-2 rounded text-sm" required></div>
+                            <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Costo ($)</label><input type="text" id="prod-costo" class="w-full p-2 rounded text-sm" oninput="formatearMoneda(this)" required></div>
+                        </div>
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Venta ($)</label><input type="text" id="prod-precio" class="w-full p-2 rounded text-sm font-bold" oninput="formatearMoneda(this)" required></div>
+                        <button type="submit" class="w-full btn-primary py-3 rounded font-bold shadow-lg mt-2">GUARDAR</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-reserva" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="cerrarModal('modal-reserva')"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gym-gray w-full md:w-[500px] rounded-2xl border border-gym-blue shadow-2xl pointer-events-auto">
+            <div class="p-5 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-white">Gestionar Reserva</h3>
+                <button onclick="cerrarModal('modal-reserva')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[80vh]">
+                <form id="form-reserva-admin" onsubmit="guardarReservaAdmin(event)" class="space-y-4">
+                    <input type="hidden" id="res-id">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs uppercase font-bold text-gym-blue block mb-1">Conjunto</label>
+                            <select id="res-conjunto" class="w-full p-2 rounded text-sm">
+                                <option value="Palmaria">Palmaria</option>
+                                <option value="Robles">Robles</option>
+                                <option value="Sauces">Sauces</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs uppercase font-bold text-gym-blue block mb-1">Servicio</label>
+                            <select id="res-servicio" class="w-full p-2 rounded text-sm">
+                                <option value="Gimnasio">Gimnasio</option>
+                                <option value="Piscina">Piscina</option>
+                                <option value="Natacion">Natación</option>
+                                <option value="Vacacional">Vacacional</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Nombre Cliente</label><input type="text" id="res-nombre" class="w-full p-2 rounded text-sm" required></div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Torre/Apto</label><input type="text" id="res-torre" class="w-full p-2 rounded text-sm"></div>
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Documento</label><input type="text" id="res-doc" class="w-full p-2 rounded text-sm"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Fecha (MM/DD/YYYY)</label><input type="text" id="res-fecha" class="w-full p-2 rounded text-sm" placeholder="02/19/2026"></div>
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Hora</label><input type="text" id="res-hora" class="w-full p-2 rounded text-sm" placeholder="5:00 PM"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Celular</label><input type="text" id="res-celular" class="w-full p-2 rounded text-sm"></div>
+                        <div><label class="text-xs uppercase font-bold text-gym-blue block mb-1">Email</label><input type="text" id="res-email" class="w-full p-2 rounded text-sm"></div>
+                    </div>
+
+                    <button type="submit" class="w-full btn-primary py-3 rounded font-bold shadow-lg mt-4">GUARDAR DATOS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let inventarioGlobal = [];
+        let listaReservas = [];
+        let chartInstancia = null;
+        let carritoCompras = []; 
+
+        const swalParams = { confirmButtonColor: '#45A29E', cancelButtonColor: '#1F2833', confirmButtonText: 'Aceptar', cancelButtonText: 'Cancelar', background: '#1F2833', color: '#fff' };
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('mobile-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+            overlay.classList.toggle('opacity-0');
+        }
+
+        function formatearMoneda(input) {
+            let v = input.value.replace(/\D/g, "");
+            input.value = v === "" ? "" : v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+        function parsearMoneda(v) { return !v ? 0 : parseFloat(v.toString().replace(/\./g, "")); }
+
+        function cambiarTab(tabName) {
+            ['dashboard', 'inventario', 'ventas', 'reservas'].forEach(t => {
+                const view = document.getElementById('view-' + t);
+                const btn = document.getElementById('btn-' + t);
+                if(view) view.classList.add('hidden');
+                if(btn) {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive');
+                }
+            });
+            document.getElementById('view-' + tabName).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabName);
+            activeBtn.classList.remove('tab-inactive');
+            activeBtn.classList.add('tab-active');
+            
+            if(tabName === 'dashboard') cargarReportes();
+            if(tabName === 'inventario') cargarInventario();
+            if(tabName === 'ventas') { cargarInventarioParaVenta(); cargarHistorialVentas(); }
+            if(tabName === 'reservas') cargarReservas();
+        }
+
+        // --- FUNCIONES RESERVAS (ACTUALIZADAS) ---
+        async function cargarReservas() {
+            const filtro = document.getElementById('filtro-fecha-reserva').value;
+            const url = filtro ? `/api/reservas?fecha=${filtro}` : '/api/reservas';
+            const tbody = document.getElementById('tabla-reservas');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gym-neon"><i class="fas fa-spinner fa-spin text-2xl"></i> Cargando agenda...</td></tr>';
+            
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                listaReservas = data;
+                
+                tbody.innerHTML = '';
+                if(data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-gray-500 italic">No hay reservas registradas para este criterio.</td></tr>';
+                    return;
+                }
+
+                data.forEach(r => {
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-gray-800 border-b border-gray-700 group">
+                            <td class="p-3">
+                                <div class="font-bold text-gym-neon">${r.Fecha_Reserva}</div>
+                                <div class="text-xs text-gray-400 font-mono">${r.Hora}</div>
+                            </td>
+                            <td class="p-3 font-bold text-white">${r.Servicio}</td>
+                            <td class="p-3 text-gray-300">${r.Nombre}</td>
+                            <td class="p-3">
+                                <span class="bg-gray-700 text-white px-2 py-1 rounded text-xs uppercase">${r.Conjunto}</span>
+                                <div class="text-xs text-gray-500 mt-1">${r.Torre_Apto}</div>
+                            </td>
+                            <td class="p-3 text-xs text-gray-400">
+                                <div>${r.Celular}</div>
+                                <div class="truncate max-w-[150px]" title="${r.Email}">${r.Email}</div>
+                            </td>
+                            <td class="p-3 text-center">
+                                <button onclick="editarReserva(${r.ID_Reserva})" class="text-gym-blue hover:text-white mx-1" title="Editar"><i class="fas fa-pen"></i></button>
+                                <button onclick="borrarReserva(${r.ID_Reserva})" class="text-red-500 hover:text-red-300 mx-1" title="Borrar"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function limpiarFiltroReservas() {
+            document.getElementById('filtro-fecha-reserva').value = "";
+            cargarReservas();
+        }
+
+        function abrirModalReserva() {
+            document.getElementById('form-reserva-admin').reset();
+            document.getElementById('res-id').value = "";
+            document.getElementById('modal-reserva').classList.remove('hidden');
+        }
+
+        function editarReserva(id) {
+            const r = listaReservas.find(x => x.ID_Reserva === id);
+            if(!r) return;
+            document.getElementById('res-id').value = r.ID_Reserva;
+            document.getElementById('res-nombre').value = r.Nombre;
+            document.getElementById('res-conjunto').value = r.Conjunto;
+            document.getElementById('res-servicio').value = r.Servicio;
+            document.getElementById('res-torre').value = r.Torre_Apto;
+            document.getElementById('res-doc').value = r.Documento;
+            document.getElementById('res-fecha').value = r.Fecha_Reserva;
+            document.getElementById('res-hora').value = r.Hora;
+            document.getElementById('res-celular').value = r.Celular;
+            document.getElementById('res-email').value = r.Email;
+            document.getElementById('modal-reserva').classList.remove('hidden');
+        }
+
+        async function guardarReservaAdmin(e) {
+            e.preventDefault();
+            const id = document.getElementById('res-id').value;
+            const data = {
+                nombre: document.getElementById('res-nombre').value,
+                conjunto: document.getElementById('res-conjunto').value,
+                servicio: document.getElementById('res-servicio').value,
+                torre_apto: document.getElementById('res-torre').value,
+                documento: document.getElementById('res-doc').value,
+                fecha: document.getElementById('res-fecha').value,
+                hora: document.getElementById('res-hora').value,
+                celular: document.getElementById('res-celular').value,
+                email: document.getElementById('res-email').value
+            };
+
+            let url = '/api/reservar';
+            if(id) { url = '/api/editar_reserva'; data.ID_Reserva = id; }
+
+            const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            
+            if(res.ok) {
+                cerrarModal('modal-reserva');
+                cargarReservas();
+                Swal.fire({...swalParams, icon:'success', title:'Guardado', timer:1000, showConfirmButton:false});
+            } else {
+                Swal.fire({...swalParams, icon:'error', title:'Error'});
+            }
+        }
+
+        async function borrarReserva(id) {
+            Swal.fire({...swalParams, title:'¿Eliminar?', icon:'warning', showCancelButton:true}).then(async r => {
+                if(r.isConfirmed) {
+                    await fetch('/api/borrar_reserva', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID_Reserva:id})});
+                    cargarReservas();
+                }
+            });
+        }
+
+        // --- TICKET MEJORADO (Estilo Profesional) ---
+        function imprimirTicketCarrito(items, ticketRef, total, cliente) {
+            const fecha = new Date().toLocaleString('es-CO');
+            const ticketContainer = document.createElement('div');
+            
+            ticketContainer.innerHTML = `
+                <div style="font-family: 'Courier New', monospace; width: 320px; background: #fff; color: #000; padding: 25px; box-sizing:border-box;">
+                    
+                    <div style="text-align:center; border-bottom: 2px dashed #000; padding-bottom:10px; margin-bottom:10px;">
+                        <div style="width:50px; height:50px; background:#000; color:#fff; border-radius:50%; line-height:50px; font-size:24px; font-weight:bold; margin:0 auto 10px;">S</div>
+                        <h2 style="margin:0; font-size:18px; font-weight:bold;">GYM SEBITAS</h2>
+                        <p style="margin:5px 0 0; font-size:11px;">NIT: 900.123.456-7</p>
+                        <p style="margin:0; font-size:11px;">Mosquera, Cundinamarca</p>
+                    </div>
+                    
+                    <div style="font-size: 11px; margin-bottom: 10px;">
+                        <div style="display:flex; justify-content:space-between;"><span>FECHA:</span> <span>${fecha}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>TICKET:</span> <span>#${ticketRef}</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>CLIENTE:</span> <span>${cliente || 'Consumidor Final'}</span></div>
+                    </div>
+                    
+                    <table style="width: 100%; font-size: 11px; border-collapse: collapse; margin-bottom: 10px;">
+                        <tr style="border-bottom: 1px solid #000;">
+                            <th style="text-align:left; padding:5px 0;">DESC</th>
+                            <th style="text-align:center; padding:5px 0;">CANT</th>
+                            <th style="text-align:right; padding:5px 0;">VALOR</th>
+                        </tr>
+                        ${items.map(i => `
+                            <tr>
+                                <td style="padding:5px 0;">${i.Producto}</td>
+                                <td style="text-align:center; padding:5px 0;">${i.Cantidad}</td>
+                                <td style="text-align:right; padding:5px 0;">$${i.Total_Venta.toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                    
+                    <div style="border-top: 2px dashed #000; padding-top:10px; margin-top:5px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold;">
+                            <span>TOTAL:</span>
+                            <span>$${total.toLocaleString()}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align:center; margin-top: 20px; font-size: 10px; font-style:italic;">
+                        <p>*** GRACIAS POR SU PREFERENCIA ***</p>
+                        <p>Conserve este ticket para reclamos</p>
+                    </div>
+                </div>
+            `;
+            
+            // Renderizado fuera de pantalla
+            ticketContainer.style.position = "absolute";
+            ticketContainer.style.left = "-9999px";
+            document.body.appendChild(ticketContainer);
+            
+            html2canvas(ticketContainer, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Recibo_${ticketRef}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                document.body.removeChild(ticketContainer);
+            });
+        }
+
+        // --- HELPERS GENERALES ---
+        function imprimirTicket(venta) {
+            imprimirTicketCarrito([venta], venta.Ticket_Ref || venta.ID_Venta, venta.Total_Venta, venta.Cliente);
+        }
+
+        async function agregarAlCarrito(e) {
+            e.preventDefault();
+            const idProd = parseInt(document.getElementById('venta-producto').value);
+            const cant = parseInt(document.getElementById('venta-cantidad').value);
+            const precio = parsearMoneda(document.getElementById('venta-precio').value);
+            
+            const itemInv = inventarioGlobal.find(p => p.ID === idProd);
+            if(!itemInv) return Swal.fire({...swalParams, icon:'error', title:'Error', text:'Seleccione producto'});
+            
+            const enCarrito = carritoCompras.find(c => c.ID_Producto === idProd);
+            const stockUsado = enCarrito ? enCarrito.Cantidad : 0;
+            
+            if((stockUsado + cant) > itemInv.Cantidad) {
+                return Swal.fire({...swalParams, icon:'error', title:'Sin Stock', text:`Max disponible: ${itemInv.Cantidad}`});
+            }
+
+            if(enCarrito) { enCarrito.Cantidad += cant; enCarrito.Precio_Venta_Real = precio; }
+            else { carritoCompras.push({ID_Producto: idProd, Producto: itemInv.Producto, Cantidad: cant, Precio_Venta_Real: precio}); }
+            
+            renderizarCarrito();
+            document.getElementById('venta-cantidad').value = "";
+            const Toast = Swal.mixin({toast: true, position: 'top-end', showConfirmButton: false, timer: 2000, background:'#45A29E', color:'#000'});
+            Toast.fire({icon: 'success', title: 'Agregado'});
+        }
+
+        function renderizarCarrito() {
+            const tbody = document.getElementById('tabla-carrito');
+            const totalDisplay = document.getElementById('carrito-total');
+            const countBadge = document.getElementById('items-count');
+            const vacioDiv = document.getElementById('carrito-vacio');
+            tbody.innerHTML = '';
+            
+            if(carritoCompras.length === 0) { vacioDiv.classList.remove('hidden'); totalDisplay.innerText = "$0"; countBadge.innerText = "0"; return; }
+            vacioDiv.classList.add('hidden');
+
+            let total = 0;
+            carritoCompras.forEach((item, idx) => {
+                const sub = item.Cantidad * item.Precio_Venta_Real;
+                total += sub;
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-800">
+                        <td class="p-2 text-white">${item.Producto}</td>
+                        <td class="p-2 text-center text-gym-neon">${item.Cantidad}</td>
+                        <td class="p-2 text-right text-gray-400">$${sub.toLocaleString('es-CO')}</td>
+                        <td class="p-2 text-center"><button onclick="eliminarDelCarrito(${idx})" class="text-red-400 hover:text-red-200"><i class="fas fa-times"></i></button></td>
+                    </tr>`;
+            });
+            totalDisplay.innerText = '$' + total.toLocaleString('es-CO');
+            countBadge.innerText = carritoCompras.length;
+        }
+
+        function eliminarDelCarrito(idx) { carritoCompras.splice(idx, 1); renderizarCarrito(); }
+
+        async function procesarVentaCarrito() {
+            if(carritoCompras.length === 0) return;
+            const data = { carrito: carritoCompras, cliente: document.getElementById('venta-cliente').value, direccion: document.getElementById('venta-direccion').value };
+            
+            const res = await fetch('/api/vender', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            const result = await res.json();
+            
+            if(res.ok) {
+                Swal.fire({...swalParams, title:'¡Venta Exitosa!', text:'¿Ticket?', showCancelButton:true}).then((r) => {
+                    if(r.isConfirmed) imprimirTicketCarrito(result.items, result.ticket_ref, result.total_global, data.cliente);
+                });
+                carritoCompras = []; renderizarCarrito(); document.getElementById('venta-cliente').value=""; document.getElementById('venta-direccion').value="";
+                cargarInventarioParaVenta(); cargarHistorialVentas(); cargarReportes();
+            } else {
+                Swal.fire({...swalParams, icon:'error', title:'Error', text: result.error});
+            }
+        }
+
+        function actualizarGrafica(fechas, valores) {
+            const ctx = document.getElementById('ventasChart').getContext('2d');
+            if (chartInstancia) chartInstancia.destroy();
+            chartInstancia = new Chart(ctx, {
+                type: 'line',
+                data: { 
+                    labels: fechas, 
+                    datasets: [{ 
+                        label: 'Ventas', 
+                        data: valores, 
+                        borderColor: '#66FCF1', 
+                        backgroundColor: 'rgba(102, 252, 241, 0.1)', 
+                        borderWidth: 2, 
+                        fill: true,
+                        tension: 0.4 
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        y: { grid: { color: '#1F2833' }, ticks: { color: '#C5C6C7' } }, 
+                        x: { grid: { display: false }, ticks: { color: '#C5C6C7' } } 
+                    } 
+                }
+            });
+        }
+
+        async function cargarReportes() {
+            try {
+                const res = await fetch('/api/reportes'); 
+                const data = await res.json();
+                
+                const fmt = (n) => '$' + (parseFloat(n)||0).toLocaleString('es-CO', {maximumFractionDigits:0});
+                document.getElementById('kpi-ingresos').innerText = fmt(data.total_ingresos);
+                document.getElementById('kpi-ganancia').innerText = fmt(data.total_ganancia);
+                document.getElementById('kpi-ventas').innerText = data.ventas_totales;
+                document.getElementById('kpi-bodega').innerText = fmt(data.valor_inventario);
+                actualizarGrafica(data.grafica_fechas, data.grafica_valores);
+                
+                const tbody = document.getElementById('tabla-top-productos');
+                tbody.innerHTML = '';
+                data.top_productos.forEach((p, i) => {
+                    tbody.innerHTML += `<tr><td class="p-2 text-gym-neon font-bold">#${i+1}</td><td class="p-2 text-white">${p.Producto}</td><td class="p-2 text-right font-mono">${p.Cantidad}</td></tr>`;
+                });
+            } catch(e) {}
+        }
+
+        async function cargarInventario() {
+            const res = await fetch('/api/inventario'); const data = await res.json(); inventarioGlobal = data;
+            const tbody = document.getElementById('tabla-inventario'); tbody.innerHTML = '';
+            data.forEach(i => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-800 border-b border-gray-700">
+                        <td class="p-3 text-center text-gray-500"><i class="fas fa-image"></i></td>
+                        <td class="p-3 font-bold text-white">${i.Producto}</td>
+                        <td class="p-3 text-center"><span class="bg-gray-700 text-white px-2 py-1 rounded text-xs">${i.Cantidad}</span></td>
+                        <td class="p-3 text-right text-gray-400">$${parseFloat(i.Costo_Compra).toLocaleString('es-CO')}</td>
+                        <td class="p-3 text-right text-gym-neon font-bold">$${parseFloat(i.Precio_Venta_Sugerido).toLocaleString('es-CO')}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="editarProducto(${i.ID})" class="text-gym-blue hover:text-white mr-2"><i class="fas fa-pen"></i></button>
+                            <button onclick="borrarProducto(${i.ID})" class="text-red-500 hover:text-red-300"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function cargarHistorialVentas() {
+            const res = await fetch('/api/ventas'); const data = await res.json();
+            const tbody = document.getElementById('tabla-historial-ventas'); tbody.innerHTML = '';
+            data.slice(0,10).forEach(v => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-800 border-b border-gray-700">
+                        <td class="p-3 text-xs text-gray-500">${v.Fecha.substring(5,16)}</td>
+                        <td class="p-3 text-white">${v.Cliente||'-'}</td>
+                        <td class="p-3 text-gray-400 text-xs">${v.Producto}</td>
+                        <td class="p-3 text-right text-gym-neon font-mono">$${parseFloat(v.Total_Venta).toLocaleString()}</td>
+                        <td class="p-3 text-center"><button onclick="borrarVenta(${v.ID_Venta})" class="text-red-500 text-xs"><i class="fas fa-trash"></i></button></td>
+                    </tr>`;
+            });
+        }
+
+        function abrirModalProducto() { document.getElementById('form-producto').reset(); document.getElementById('prod-id').value=""; document.getElementById('modal-producto').classList.remove('hidden'); previewImagen(""); }
+        function cerrarModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function editarProducto(id) {
+            const item = inventarioGlobal.find(p=>p.ID===id);
+            if(item) {
+                document.getElementById('prod-id').value=item.ID; document.getElementById('prod-nombre').value=item.Producto;
+                document.getElementById('prod-cantidad').value=item.Cantidad; document.getElementById('prod-imagen').value=item.Imagen||"";
+                let c=document.getElementById('prod-costo'); c.value=item.Costo_Compra; formatearMoneda(c);
+                let p=document.getElementById('prod-precio'); p.value=item.Precio_Venta_Sugerido; formatearMoneda(p);
+                document.getElementById('modal-producto').classList.remove('hidden');
+                previewImagen(item.Imagen);
+            }
+        }
+        async function guardarProducto(e) {
+            e.preventDefault();
+            const data = {
+                ID: document.getElementById('prod-id').value, Producto: document.getElementById('prod-nombre').value, Cantidad: document.getElementById('prod-cantidad').value,
+                Costo_Compra: parsearMoneda(document.getElementById('prod-costo').value), Precio_Venta_Sugerido: parsearMoneda(document.getElementById('prod-precio').value), Imagen: document.getElementById('prod-imagen').value
+            };
+            await fetch('/api/inventario', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+            cerrarModal('modal-producto'); cargarInventario(); cargarInventarioParaVenta();
+            Swal.fire({...swalParams, icon:'success', title:'Guardado', timer:1000, showConfirmButton:false});
+        }
+        async function borrarProducto(id) {
+            Swal.fire({...swalParams, title:'¿Eliminar?', icon:'warning', showCancelButton:true}).then(async r => {
+                if(r.isConfirmed) { await fetch('/api/borrar_producto', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID:id})}); cargarInventario(); }
+            });
+        }
+        async function borrarVenta(id) {
+            Swal.fire({...swalParams, title:'¿Eliminar Venta?', icon:'warning', showCancelButton:true}).then(async r => {
+                if(r.isConfirmed) { await fetch('/api/borrar_venta', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ID_Venta:id})}); cargarHistorialVentas(); cargarReportes(); }
+            });
+        }
+        function previewImagen(url) { 
+            const img=document.getElementById('prod-preview'); const i=document.getElementById('prod-preview-icon');
+            if(url){ img.src=url; img.classList.remove('hidden'); i.classList.add('hidden'); }
+            else { img.classList.add('hidden'); i.classList.remove('hidden'); }
+        }
+        async function cargarInventarioParaVenta() {
+            const res = await fetch('/api/inventario'); const data = await res.json(); inventarioGlobal=data;
+            const s = document.getElementById('venta-producto'); s.innerHTML='<option value="">Seleccione...</option>';
+            data.forEach(i => { if(i.Cantidad>0) s.innerHTML+=`<option value="${i.ID}">${i.Producto} (${i.Cantidad})</option>`; });
+        }
+        function actualizarInfoProductoVenta() {
+            const id = parseInt(document.getElementById('venta-producto').value);
+            const item = inventarioGlobal.find(p=>p.ID===id);
+            const c=document.getElementById('info-img-container'); const ph=document.getElementById('info-placeholder');
+            if(item) {
+                let p=document.getElementById('venta-precio'); p.value=item.Precio_Venta_Sugerido; formatearMoneda(p);
+                if(item.Imagen) { document.getElementById('info-img-producto').src=item.Imagen; c.classList.remove('hidden'); ph.classList.add('hidden'); }
+                else { c.classList.add('hidden'); ph.classList.remove('hidden'); }
+            } else {
+                document.getElementById('venta-precio').value=""; c.classList.add('hidden'); ph.classList.remove('hidden');
+            }
+        }
+
+        setInterval(() => { document.getElementById('reloj').innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }, 1000);
+        cargarReportes();
+    </script>
+</body>
+</html>
