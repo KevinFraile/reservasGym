@@ -94,7 +94,7 @@ def inventario():
 
 # --- API INVENTARIO (Ahora con MongoDB) ---
 @app.route("/api/inventario", methods=["GET", "POST"])
-@jwt_required()
+# @jwt_required() IMPORTANTE VOLVERLO A COLOCAR Y CREAR OTRO SERVICIO DE LOGIN CON JWT PARA PROTEGER TODAS LAS RUTAS DE LA API
 def api_inventario():
     try:
         db = app.config['MONGO_DB']
