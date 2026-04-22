@@ -16,16 +16,22 @@ app = Flask(__name__)
 
 # 2. HABILITAMOS CORS (Súper importante para los puertos de Ionic/Angular)
 # supports_credentials=True es obligatorio para que funcionen las cookies del JWT
-CORS(app, supports_credentials=True, origins=["http://localhost:8100", "http://127.0.0.1:8100", "http://localhost:4200", "https://berracodev.com", "http://localhost", "ionic://localhost"])
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost:8100", 
+    "http://127.0.0.1:8100", 
+    "http://localhost:4200", 
+    "https://berracodev.com",
+    "http://localhost",       
+    "https://localhost",     
+    "capacitor://localhost",  
+    "ionic://localhost"       
+])
 # --- CONFIGURACIÓN DE SEGURIDAD (JWT) ---
 app.config["JWT_SECRET_KEY"] = "NSEQPNER817N84H**f.DSF45W--ASAFF-SD4234FIRMA:KEVINFC"
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]   # ← cambio clave: lee el header
 app.config["JWT_COOKIE_CSRF_PROTECT"] = False
 jwt = JWTManager(app)
 
-# ... (el resto de tu código de las bases de datos y registros sigue exactamente igual hacia abajo)
-
-# --- CONFIGURACIÓN DE MONGODB ATLAS (DOBLE CONEXIÓN) ---
 
 # Conexión 1: Sebas Gym (y Reservas)
 app.config["MONGO_URI_GYM"] = "mongodb+srv://gymSebas:YupRj1PBDYgMvoCP@cluster0.qwhsnns.mongodb.net/sebas_gym_db?appName=Cluster0"
