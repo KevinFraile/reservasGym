@@ -17,7 +17,6 @@ app = Flask(__name__)
 # 2. HABILITAMOS CORS (Súper importante para los puertos de Ionic/Angular)
 # supports_credentials=True es obligatorio para que funcionen las cookies del JWT
 CORS(app, supports_credentials=True, origins=["http://localhost:8100", "http://127.0.0.1:8100", "http://localhost:4200", "https://berracodev.com", "http://localhost", "ionic://localhost"])
-
 # --- CONFIGURACIÓN DE SEGURIDAD (JWT) ---
 app.config["JWT_SECRET_KEY"] = "NSEQPNER817N84H**f.DSF45W--ASAFF-SD4234FIRMA:KEVINFC"
 app.config["JWT_TOKEN_LOCATION"] = ["headers"]   # ← cambio clave: lee el header
