@@ -5,6 +5,7 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 from flask_pymongo import PyMongo
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, set_access_cookies, unset_jwt_cookies
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
 # 1. IMPORTAMOS CORS
 from flask_cors import CORS 
@@ -196,4 +197,7 @@ def reportes():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8080)
+    # Obtiene el puerto asignado por Render o usa el 8080 en local
+    port = int(os.environ.get("PORT", 8080))
+    # host="0.0.0.0" es crucial para que Render pueda ver la aplicación
+    app.run(host="0.0.0.0", port=port, debug=False)
